@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Hit Game - Batman Theme</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #000; /* Black background */
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 10px;
+            color: #FF0000; /* Red text */
+        }
+
+        #gameArea {
+            position: relative;
+            width: 90vw; /* Responsive for mobile */
+            height: 50vh;
+            background-image: url("60.jpeg"); /* Background image */
+            background-size: cover;
+            border: 2px solid #FF0000; /* Red border */
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .target {
+            position: absolute;
+            width: 75px; /* Set to 1 inch in pixels */
+            height: 75px; /* Set to 1 inch in pixels */
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+
+        .shoe {
+            position: absolute;
+            width: 75px; /* Set to 1 inch in pixels */
+            height: 75px; /* Set to 1 inch in pixels */
+            border-radius: 50%;
+            left: 100px; /* Initial position */
+            top: 100px; /* Initial position */
+        }
+
+        .control-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .control-sphere {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #FF0000; /* Red border */
+            border-radius: 50%;
+            margin: 5px;
+            background: #333; /* Dark background */
+            color: #FF0000; /* Red text */
+            font-size: 1.5em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s ease-in-out;
+            touch-action: manipulation;
+        }
+
+        .control-sphere:hover {
+            transform: scale(1.2);
+        }
+
+        #shootButton {
+            width: 100px;
+            height: 100px;
+            background: #FF0000; /* Red button */
+            border-radius: 50%;
+            color: #333; /* Dark text */
+            font-size: 20px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        .scoreboard {
+            margin: 15px;
+            font-size: 1.2em;
+            color: #FF0000; /* Red scoreboard */
+        }
+    </style>
+</head>
+<body>
+    <h1>Hit the Superhumans!</h1>
+    <div id="gameArea">
+        <audio id="backgroundMusic" loop>
+            <source src="0.mp3" type="audio/mpeg"> <!-- Background music -->
+        </audio>
+        <audio id="hitSound1">
+            <source src="1.mp3" type="audio/mpeg"> <!-- Sound for target 62.jpeg -->
+        </audio>
+        <audio id="hitSound2">
+            <source src="2.mp3" type="audio/mpeg"> <!-- Sound for other targets -->
+        </audio>
+        <img id="shoe" class="shoe" src="https://img.icons8.com/emoji/48/000000/running-shoe.png" alt="Shoe">
+        <img id="target1" class="target" src="61.jpg" alt="Target 1" style="display: block;"> <!-- Updated -->
+        <img id="target2" class="target" src="62.jpeg" alt="Target 2" style="display: block;"> <!-- Updated -->
+        <img id="target3" class="target" src="63.png" alt="Target 3" style="display: block;"> <!-- Updated -->
+    </div>
+    <div class="scoreboard">
+        Shots Left: <span id="shotsLeft">10</span> | Score: <span id="score">0</span>
+    </div>
+    <div class="control-container">
+        <div class="control-sphere" id="upBtn" onclick="moveShoe('up')">↑</div>
+        <div class="control-sphere" id="downBtn" onclick="moveShoe('down')">↓</div>
+        <div class="control-sphere" id="leftBtn" onclick="moveShoe('left')">←</div>
+        <div class="control-sphere" id="rightBtn" onclick="moveShoe('right')">→</div>
+    </div>
+    <button id="shootButton" onclick="shoot()">Shoot</button>
+    <button id="restartButton" onclick="restartGame()">Restart</button>
+
+    <script>
+        let score = 0;
+        let shotsLeft = 10; // Updated shooting chances
+        const gameArea = document.getElementById('gameArea');
+        const shoe = document.getElementById('shoe');
+        const targets = [
+            document.getElementById('target1'),
+            document.getElementById('target2'),
+            document.getElementById('target3')
+        ];
+
+        const targetSpeeds = [
+            { dx: 2, dy: 1 },
+            { dx: -1, dy: 2 },
+            { dx: 3, dy: -2 }
+        ];
+
+        let shoePosition = { x: 100, y: 100 };
+
+        // Start playing background music
+        document.getElementById('backgroundMusic').play();
+
+        function moveShoe(direction) {
+            const moveBy = 20;
+            if (direction === 'up' && shoePosition.y > 0) shoePosition.y -= moveBy;
+            if (direction === 'down' && shoePosition.y < gameArea.clientHeight - shoe.clientHeight) shoePosition.y += moveBy;
+            if (direction === 'left' && shoePosition.x > 0) shoePosition.x -= moveBy;
+            if (direction === 'right' && shoePosition.x < gameArea.clientWidth - shoe.clientWidth) shoePosition.x += moveBy;
+
+            shoe.style.left = shoePosition.x + 'px';
+            shoe.style.top = shoePosition.y + 'px';
+        }
+
+        function moveTargets() {
+            targets.forEach((target, index) => {
+                const speed = targetSpeeds[index];
+                let x = parseInt(target.style.left) || Math.random() * (gameArea.clientWidth - target.clientWidth);
+                let y = parseInt(target.style.top) || Math.random() * (gameArea.clientHeight - target.clientHeight);
+                x += speed.dx;
+                y += speed.dy;
+
+                if (x <= 0 || x >= gameArea.clientWidth - target.clientWidth) speed.dx *= -1;
+                if (y <= 0 || y >= gameArea.clientHeight - target.clientHeight) speed.dy *= -1;
+
+                target.style.left = x + 'px';
+                target.style.top = y + 'px';
+            });
+        }
+
+        // Start moving targets
+        setInterval(moveTargets, 100); // Move targets every 100ms
+
+        function shoot() {
+            if (shotsLeft <= 0) return; // Prevent shooting when no shots left
+
+            shotsLeft--;
+            document.getElementById('shotsLeft').textContent = shotsLeft;
+
+            const rect1 = shoe.getBoundingClientRect();
+
+            targets.forEach((target) => {
+                const rect2 = target.getBoundingClientRect();
+                // Check for collision
+                if (!(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom)) {
+                    score++;
+                    document.getElementById('score').textContent = score;
+                    
+                    // Play sound effects based on the target hit
+                    if (target.id === 'target2') {
+                        playSound('hitSound1'); // Sound for target 62.jpeg
+                    } else {
+                        playSound('hitSound2'); // Sound for other targets
+                    }
+                    // Hide the target after being hit
+                    target.style.display = 'none';
+                }
+            });
+
+            if (shotsLeft === 0) {
+                alert(`Game Over! Final Score: ${score}`);
+                restartGame();
+            }
+        }
+
+        function playSound(soundId) {
+            const sound = document.getElementById(soundId);
+            sound.currentTime = 0; // Reset the sound
+            sound.play();
+        }
+
+        function restartGame() {
+            score = 0;
+            shotsLeft = 10;
+            document.getElementById
